@@ -51,7 +51,8 @@ class Trainer:
     def data_collator(self, input):
         new_input = {"anchor": input[0][0],
                      "pos": input[0][1],
-                     "neg": input[0][2]}
+                     "neg": input[0][2], 
+                     "return_loss": True}
         return new_input
     
     def _init_model(self, model_type):
