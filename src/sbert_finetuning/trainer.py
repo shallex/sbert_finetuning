@@ -2,24 +2,46 @@ from transformers import AutoTokenizer, AutoModel
 import logging
 from sbert_finetuning.models import ModelType
 from sbert_finetuning.data import Dataset
-from torch.utils.data import DataLoader
-from sentence_transformers import losses
-from sbert_finetuning.loss import LossType
+import torch
+
+from transformers import TrainingArguments, Trainer as HFTrainer
+import numpy as np 
+import evaluate
 
 
 class Trainer:
-    def __init__(self, l_rate, batch_size, loss_type, num_epoch, model_type, device, export_dir, train_data_path, valid_data_path, test_data_path):
+    def __init__(self, l_rate, batch_size, num_epoch, model_type, device, export_dir, train_data_path, valid_data_path, test_data_path):
         self.logger = logging.getLogger(__class__.__name__)
 
         self._l_rate = l_rate
         self._batch_size = batch_size
-        self._loss_type = loss_type
         self._num_epoch = num_epoch
         self._model_type = model_type
 
         self.model, self.tokenizer = self._init_model(self._model_type)
-        self._init_dataloaders(train_data_path, valid_data_path, test_data_path)
-        self._init_loss(self._loss_type)
+        self._init_datasets(train_data_path, valid_data_path, test_data_path)
+        self.training_args = TrainingArguments(output_dir=export_dir,
+                                               learning_rate=l_rate,
+                                               num_train_epochs=num_epoch,
+                                               save_strategy="epoch",
+                                               evaluation_strategy="epoch",
+                                               )
+        
+
+        self.clf_metrics = evaluate.combine(["accuracy", "f1"])
+
+        
+        self.huggingface_trainer = HFTrainer(
+                                    model=self.model,
+                                    args=self.training_args,
+                                    train_dataset=self.train_dataset,
+                                    eval_dataset=self.valid_dataset,
+                                    compute_metrics=self.compute_metrics,
+                                    
+                                )
+        self.huggingface_trainer.compute_loss = self.compute_loss
+        self.loss_fn = torch.nn.TripletMarginLoss()
+
     
     def _init_model(self, model_type):
         if model_type == ModelType.SbertLargeNluRu:
@@ -30,34 +52,42 @@ class Trainer:
         
         return model, tokenizer
 
-    def _init_dataloaders(self, train_data_path, valid_data_path, test_data_path):
-        train_dataset = Dataset(train_data_path)
-        valid_dataset = Dataset(valid_data_path)
-        test_dataset = Dataset(test_data_path)
-        self.logger.info(f"{len(train_dataset)=}")
-        self.logger.info(f"{len(valid_dataset)=}")
-        self.logger.info(f"{len(test_dataset)=}")
+    def _init_datasets(self, train_data_path, valid_data_path, test_data_path):
+        self.train_dataset = Dataset(train_data_path, self.tokenizer)
+        self.valid_dataset = Dataset(valid_data_path, self.tokenizer)
+        self.test_dataset = Dataset(test_data_path, self.tokenizer)
+        self.logger.info(f"{len(self.train_dataset)=}")
+        self.logger.info(f"{len(self.valid_dataset)=}")
+        self.logger.info(f"{len(self.test_dataset)=}")
 
-        self.train_dataloader = DataLoader(train_dataset, shuffle=True, batch_size=self._batch_size)
-        self.valid_dataloader = DataLoader(valid_dataset, shuffle=False, batch_size=1)
-        self.test_dataloader = DataLoader(test_dataset, shuffle=False, batch_size=1)
+    def mean_pooling(model_output, attention_mask):
+        token_embeddings = model_output[0] #First element of model_output contains all token embeddings
+        input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
+        sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
+        sum_mask = torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+        return sum_embeddings / sum_mask
 
-    def _init_loss(self, loss_type):
-        if loss_type == LossType.BatchAllTripletLoss:
-            self._loss_fn = losses.BatchAllTripletLoss(model=self.model)
-        elif loss_type == LossType.BatchHardSoftMarginTripletLoss:
-            self._loss_fn = losses.BatchHardSoftMarginTripletLoss(model=self.model)
-        elif loss_type == LossType.BatchHardTripletLoss:
-            self._loss_fn = losses.BatchHardTripletLoss(model=self.model)
-        elif loss_type == LossType.BatchSemiHardTripletLoss:
-            self._loss_fn = losses.BatchSemiHardTripletLoss(model=self.model)
-        else:
-            raise ValueError(f"Loss type: {loss_type} doesn't supported!")
+    def compute_loss(self, model, inputs, return_outputs=False):
+        anchor, pos, neg = inputs
+        anchor_labels = anchor.pop("labels")
+        pos_labels = pos.pop("labels")
+        neg_labels = neg.pop("labels")
+
+        anchor_outputs = self.mean_pooling(model(**anchor), anchor['attention_mask']) 
+        pos_outputs = self.mean_pooling(model(**pos), anchor['attention_mask']) 
+        neg_outputs = self.mean_pooling(model(**neg), anchor['attention_mask'])
+
+        loss = self.loss_fn(anchor_outputs, pos_outputs, neg_outputs)
+
+        return (loss, anchor_outputs) if return_outputs else loss
+
         
-    def fit(self):
-        self.model.fit(train_objectives=[(self.train_dataloader, self._loss_fn)], epochs=self._num_epoch) 
-
-
-
+    def compute_metrics(self, eval_pred):
+        return {"Mock": 1.0}
+        logits, labels = eval_pred
+        predictions = np.argmax(logits, axis=-1)
+        return self.clf_metrics.compute(predictions=predictions, references=labels)
 
     
+    def train(self):
+        self.huggingface_trainer.train()
