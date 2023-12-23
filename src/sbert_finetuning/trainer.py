@@ -42,11 +42,16 @@ class Trainer:
                                     train_dataset=self.train_dataset,
                                     eval_dataset=self.valid_dataset,
                                     compute_metrics=self.compute_metrics,
-                                    data_collator=lambda x: x,
+                                    data_collator=self.data_collator,
                                 )
         self.huggingface_trainer.compute_loss = self.compute_loss
         self.loss_fn = torch.nn.TripletMarginLoss()
 
+    def data_collator(self, input):
+        new_input = {"anchor": input[0][0],
+                     "pos": input[0][1],
+                     "neg": input[0][2]}
+        return new_input
     
     def _init_model(self, model_type):
         if model_type == ModelType.SbertLargeNluRu:
@@ -73,7 +78,7 @@ class Trainer:
         return sum_embeddings / sum_mask
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        anchor, pos, neg = inputs[0]
+        anchor, pos, neg = inputs["anchor"], inputs["pos"], inputs["neg"]
         # anchor_labels = anchor.pop("labels")
         # pos_labels = pos.pop("labels")
         # neg_labels = neg.pop("labels")
