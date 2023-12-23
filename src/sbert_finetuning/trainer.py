@@ -73,7 +73,6 @@ class Trainer:
         return sum_embeddings / sum_mask
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        print(inputs)
         anchor, pos, neg = inputs[0]
         # anchor_labels = anchor.pop("labels")
         # pos_labels = pos.pop("labels")
