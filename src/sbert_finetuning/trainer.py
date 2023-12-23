@@ -90,6 +90,7 @@ class Trainer:
         neg_outputs = self.mean_pooling(model(**neg), anchor['attention_mask'])
 
         loss = self.loss_fn(anchor_outputs, pos_outputs, neg_outputs)
+        print(loss.detach().cpu())
 
         return (loss, anchor_outputs) if return_outputs else loss
 
