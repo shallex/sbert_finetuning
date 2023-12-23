@@ -12,7 +12,7 @@ class Dataset:
         self.encodings = tokenizer(all_texts, truncation=True, padding=True, return_tensors='pt')
         self.labels = data["label"].values.tolist()
 
-        self.lbl2texts = {}
+        self.lbl2encoding = {}
         for label in self.unique_labels:
             self.lbl2encoding[label] = set(data[data["label"] == label].index.values)
             
