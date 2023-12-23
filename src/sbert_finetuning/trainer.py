@@ -26,7 +26,7 @@ class Trainer:
                                                num_train_epochs=num_epoch,
                                                save_strategy="epoch",
                                                evaluation_strategy="epoch",
-                                               use_cpu=True,
+                                               use_cpu=False,
                                                report_to=None,
                                                per_device_train_batch_size=batch_size,
                                                per_device_eval_batch_size=batch_size,
