@@ -34,9 +34,9 @@ def finetune(l_rate,
              valid_data_path, 
              test_data_path
              ):
-    Trainer(l_rate, batch_size, num_epoch, model_type, device, export_dir, train_data_path, valid_data_path, test_data_path)
+    trainer = Trainer(l_rate, batch_size, num_epoch, model_type, device, export_dir, train_data_path, valid_data_path, test_data_path)
 
-    Trainer.train()
+    trainer.train()
     
 
 if __name__ == "__main__":
