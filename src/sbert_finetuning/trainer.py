@@ -20,12 +20,14 @@ class Trainer:
 
         self.model, self.tokenizer = self._init_model(self._model_type)
         self._init_datasets(train_data_path, valid_data_path, test_data_path)
-        self.training_args = TrainingArguments(output_dir=export_dir,
+        self.training_args = TrainingArguments(
+                                               output_dir=export_dir,
                                                learning_rate=l_rate,
                                                num_train_epochs=num_epoch,
                                                save_strategy="epoch",
                                                evaluation_strategy="epoch",
                                                use_cpu=False,
+                                               report_to=None
                                                )
         
 
