@@ -6,7 +6,7 @@ import torch
 
 from transformers import TrainingArguments, Trainer as HFTrainer
 import numpy as np 
-import evaluate
+# import evaluate
 
 
 class Trainer:
@@ -25,10 +25,11 @@ class Trainer:
                                                num_train_epochs=num_epoch,
                                                save_strategy="epoch",
                                                evaluation_strategy="epoch",
+                                               use_cpu=False,
                                                )
         
 
-        self.clf_metrics = evaluate.combine(["accuracy", "f1"])
+        # self.clf_metrics = evaluate.combine(["accuracy", "f1"])
 
         
         self.huggingface_trainer = HFTrainer(
