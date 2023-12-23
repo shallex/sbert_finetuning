@@ -20,19 +20,19 @@ class Dataset:
         return len(self.labels)
 
     def __getitem__(self, idx):
-        anchor = {key: torch.tensor(val[idx]) for key, val in self.encodings.items()}
+        anchor = {key: torch.Tensor(val[idx]).unsqueeze(0) for key, val in self.encodings.items()}
         label = self.labels[idx]
-        anchor['labels'] = torch.tensor(label)
+        # anchor['labels'] = torch.tensor(label)
 
         pos_idxs = self.lbl2idxs[label] - {idx}
         pos_idx = random.sample(pos_idxs, k=1)[0]
-        pos = {key: torch.tensor(val[pos_idx]) for key, val in self.encodings.items()}
-        pos["labels"] = label
+        pos = {key: torch.Tensor(val[pos_idx]).unsqueeze(0) for key, val in self.encodings.items()}
+        # pos["labels"] = label
 
         neg_labels = self.unique_labels - {label}
         neg_label = random.sample(neg_labels, k=1)[0]
         neg_idx = random.sample(self.lbl2idxs[neg_label], k=1)[0]
-        neg = {key: torch.tensor(val[neg_idx]) for key, val in self.encodings.items()}
-        neg["labels"] = self.labels[neg_idx]
+        neg = {key: torch.Tensor(val[neg_idx]).unsqueeze(0) for key, val in self.encodings.items()}
+        # neg["labels"] = self.labels[neg_idx]
 
         return anchor, pos, neg

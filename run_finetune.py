@@ -8,7 +8,7 @@ from sbert_finetuning.utils import set_global_seed, init_wandb
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-lr", "--l_rate", default=3e-4)
-    parser.add_argument("-bs", "--batch_size", default=4)
+    parser.add_argument("-bs", "--batch_size", default=1)
     parser.add_argument("--num_epoch", default=10)
     parser.add_argument("--model_type", default=ModelType.SbertLargeNluRu)
 

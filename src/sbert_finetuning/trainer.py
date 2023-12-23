@@ -26,8 +26,10 @@ class Trainer:
                                                num_train_epochs=num_epoch,
                                                save_strategy="epoch",
                                                evaluation_strategy="epoch",
-                                               use_cpu=False,
-                                               report_to=None
+                                               use_cpu=True,
+                                               report_to=None,
+                                               per_device_train_batch_size=batch_size,
+                                               per_device_eval_batch_size=batch_size,
                                                )
         
 
@@ -40,7 +42,7 @@ class Trainer:
                                     train_dataset=self.train_dataset,
                                     eval_dataset=self.valid_dataset,
                                     compute_metrics=self.compute_metrics,
-                                    
+                                    data_collator=lambda x: x,
                                 )
         self.huggingface_trainer.compute_loss = self.compute_loss
         self.loss_fn = torch.nn.TripletMarginLoss()
@@ -63,7 +65,7 @@ class Trainer:
         self.logger.info(f"{len(self.valid_dataset)=}")
         self.logger.info(f"{len(self.test_dataset)=}")
 
-    def mean_pooling(model_output, attention_mask):
+    def mean_pooling(self, model_output, attention_mask):
         token_embeddings = model_output[0] #First element of model_output contains all token embeddings
         input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
         sum_embeddings = torch.sum(token_embeddings * input_mask_expanded, 1)
@@ -71,10 +73,11 @@ class Trainer:
         return sum_embeddings / sum_mask
 
     def compute_loss(self, model, inputs, return_outputs=False):
-        anchor, pos, neg = inputs
-        anchor_labels = anchor.pop("labels")
-        pos_labels = pos.pop("labels")
-        neg_labels = neg.pop("labels")
+        print(inputs)
+        anchor, pos, neg = inputs[0]
+        # anchor_labels = anchor.pop("labels")
+        # pos_labels = pos.pop("labels")
+        # neg_labels = neg.pop("labels")
 
         anchor_outputs = self.mean_pooling(model(**anchor), anchor['attention_mask']) 
         pos_outputs = self.mean_pooling(model(**pos), anchor['attention_mask']) 
