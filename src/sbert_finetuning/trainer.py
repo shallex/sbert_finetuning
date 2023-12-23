@@ -30,6 +30,7 @@ class Trainer:
                                                report_to=None,
                                                per_device_train_batch_size=batch_size,
                                                per_device_eval_batch_size=batch_size,
+                                               label_names=[],
                                                )
         
 
