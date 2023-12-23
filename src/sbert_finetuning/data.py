@@ -6,6 +6,7 @@ import torch
 class Dataset:
     def __init__(self, data_path, tokenizer):
         data = pd.read_csv(data_path)
+        data = data.iloc[:100, :]
         self.unique_labels = set(data["label"].unique())
         
         all_texts = data["text"].values.tolist()
