@@ -31,9 +31,7 @@ class Dataset:
 
         neg_labels = self.unique_labels - {label}
         neg_label = random.sample(neg_labels, k=1)[0]
-        neg_idxs = random.sample(self.lbl2idxs[neg_label], k=1)[0]
-        neg_idx = random.sample(sorted(neg_idxs), k=1)
-        print(neg_idx)
+        neg_idx = random.sample(self.lbl2idxs[neg_label], k=1)[0]
         neg = {key: torch.tensor(val[neg_idx]) for key, val in self.encodings.items()}
         neg["labels"] = self.labels[neg_idx]
 
