@@ -10,7 +10,7 @@ import numpy as np
 
 
 class Trainer:
-    def __init__(self, l_rate, batch_size, num_epoch, model_type, device, export_dir, train_data_path, valid_data_path, test_data_path):
+    def __init__(self, l_rate, batch_size, num_epoch, model_type, device, margin, export_dir, train_data_path, valid_data_path, test_data_path):
         self.logger = logging.getLogger(__class__.__name__)
 
         self._l_rate = l_rate
@@ -46,7 +46,7 @@ class Trainer:
                                     data_collator=self.data_collator,
                                 )
         self.huggingface_trainer.compute_loss = self.compute_loss
-        self.loss_fn = torch.nn.TripletMarginLoss(margin=10)
+        self.loss_fn = torch.nn.TripletMarginLoss(margin=margin)
 
     def data_collator(self, input):
         new_input = {"anchor": input[0][0],

@@ -11,6 +11,7 @@ def parse_args():
     parser.add_argument("-bs", "--batch_size", default=1, type=int)
     parser.add_argument("--num_epoch", default=10, type=int)
     parser.add_argument("--model_type", default=ModelType.SbertLargeNluRu)
+    parser.add_argument("--margin", default=10, type=int)
 
     parser.add_argument("--device", default="cuda")
     parser.add_argument("--export_dir", required=True)
@@ -28,13 +29,14 @@ def finetune(l_rate,
              batch_size,
              num_epoch, 
              model_type, 
-             device, 
+             device,
+             margin,
              export_dir, 
              train_data_path, 
              valid_data_path, 
              test_data_path
              ):
-    trainer = Trainer(l_rate, batch_size, num_epoch, model_type, device, export_dir, train_data_path, valid_data_path, test_data_path)
+    trainer = Trainer(l_rate, batch_size, num_epoch, model_type, device, margin, export_dir, train_data_path, valid_data_path, test_data_path)
 
     trainer.train()
     
@@ -53,6 +55,7 @@ if __name__ == "__main__":
         num_epoch=args.num_epoch,
         model_type=args.model_type,
         device=args.device,
+        margin=args.margin,
         export_dir=args.export_dir,
         train_data_path=args.train_data_path,
         valid_data_path=args.valid_data_path,
