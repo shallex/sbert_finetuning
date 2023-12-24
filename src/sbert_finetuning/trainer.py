@@ -89,6 +89,14 @@ class Trainer:
         pos_outputs = self.mean_pooling(model(**pos), anchor['attention_mask']) 
         neg_outputs = self.mean_pooling(model(**neg), anchor['attention_mask'])
 
+        print()
+        print("anchor vs pos")
+        print(np.linalg.norm((anchor_outputs.detach().cpu().numpy() - 
+                              pos_outputs.detach().cpu().numpy())))
+        print("anchor vs neg")
+        print(np.linalg.norm((anchor_outputs.detach().cpu().numpy() - 
+                              neg_outputs.detach().cpu().numpy())))
+
         loss = self.loss_fn(anchor_outputs, pos_outputs, neg_outputs)
         print("\n Loss: ", loss.detach().cpu())
 
