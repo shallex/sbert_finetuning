@@ -6,8 +6,8 @@ import torch
 class Dataset:
     def __init__(self, data_path, tokenizer):
         data = pd.read_csv(data_path)
-        # data = data.iloc[[0,1,4,5], :].reset_index(drop=True)
-        data = data.iloc[:96, :]
+        data = data.iloc[[0,1,4,5], :].reset_index(drop=True)
+        # data = data.iloc[:96, :]
         # print(data)
         self.unique_labels = set(data["label"].unique())
         
