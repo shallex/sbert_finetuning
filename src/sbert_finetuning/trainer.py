@@ -42,11 +42,11 @@ class Trainer:
                                     args=self.training_args,
                                     train_dataset=self.train_dataset,
                                     eval_dataset=self.valid_dataset,
-                                    compute_metrics=self.compute_metrics,
+                                    compute_metrics=None,
                                     data_collator=self.data_collator,
                                 )
         self.huggingface_trainer.compute_loss = self.compute_loss
-        self.loss_fn = torch.nn.TripletMarginLoss()
+        self.loss_fn = torch.nn.TripletMarginLoss(margin=10)
 
     def data_collator(self, input):
         new_input = {"anchor": input[0][0],
@@ -90,7 +90,7 @@ class Trainer:
         neg_outputs = self.mean_pooling(model(**neg), anchor['attention_mask'])
 
         loss = self.loss_fn(anchor_outputs, pos_outputs, neg_outputs)
-        print(loss.detach().cpu())
+        print("\n Loss: ", loss.detach().cpu())
 
         return (loss, anchor_outputs) if return_outputs else loss
 
